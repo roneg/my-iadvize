@@ -36,4 +36,15 @@ class VdmEntityRepository extends \Doctrine\ORM\EntityRepository
         return new Response('Saved new vdmentity with id '.$vdmentity->getId());
     }
 
+    public function listAllVdm()
+    {  
+        $em = $this->getEntityManager();
+
+        $query = $em->createQuery("select v from AppBundle\Entity\VdmEntity v");
+        $vdmentity = $query->getResult();
+        var_dump($vdmentity);
+
+        return new Response('List of vdm entities');
+    }
+
 }
