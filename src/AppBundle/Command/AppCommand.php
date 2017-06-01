@@ -9,8 +9,17 @@ use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 
 use Psr\Log\LoggerInterface;
 
+use Symfony\Component\DomCrawler\Crawler;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Client;
+
 class AppCommand extends ContainerAwareCommand
 {
+    private $logger;
+    
+    const BASEURL = 'http://www.viedemerde.fr/';
+
+
     protected function configure()
     {
 		$this
@@ -22,6 +31,24 @@ class AppCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-		$this->getContainer()->get('logger')->info('Entering configure Command');
+        $this->logger = $this->getContainer()->get('logger');
+
+        $this->logger->info('Entering configure Command');
+
+        $entityManager = $this->getContainer()->get('doctrine')->getManager();
+
+        $entityManager->getRepository('AppBundle:Post')->getPosts();
+
+
+        $request = new Request('GET', self::BASEURL);
+        $client = new Client(['base_uri' => self::BASEURL]);
+        $response = $client->send($request, ['timeout' => 2]);
+        $body = $response->getBody();
+        $crawler = new Crawler((string)$body);
+
+        foreach ($crawler as $domElement) {
+            $this->logger->info($domElement->nodeName);
+        }
+        // echo $body;
     }
 }

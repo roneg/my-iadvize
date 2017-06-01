@@ -37,10 +37,17 @@ class PostRepository extends \Doctrine\ORM\EntityRepository
         $em = $this->getEntityManager();
 
         $query = $em->createQuery("select p from AppBundle\Entity\Post p");
-        $posts = $query->getResult();
+        $posts = $query->getArrayResult();
         var_dump($posts);
 
         // return new Response('List of Posts entities');
         return new JsonResponse($posts);
+    }
+
+    public function save(Post $post)
+    {
+        $em = $this->getEntityManager();
+        $em->persist($post);
+        $em->flush();
     }
 }
