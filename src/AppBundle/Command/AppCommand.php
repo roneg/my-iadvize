@@ -17,8 +17,9 @@ class AppCommand extends ContainerAwareCommand
 {
     private $logger;
     
-    const BASEURL = 'http://www.viedemerde.fr/';
-
+    const BASEURL = 'http://www.viedemerde.fr/?page=';
+    const POST2CRAWL = 200;
+    const MAXPAGE = 12;
 
     protected function configure()
     {
@@ -40,15 +41,40 @@ class AppCommand extends ContainerAwareCommand
         $entityManager->getRepository('AppBundle:Post')->getPosts();
 
 
-        $request = new Request('GET', self::BASEURL);
-        $client = new Client(['base_uri' => self::BASEURL]);
-        $response = $client->send($request, ['timeout' => 2]);
-        $body = $response->getBody();
-        $crawler = new Crawler((string)$body);
-
-        foreach ($crawler as $domElement) {
-            $this->logger->info($domElement->nodeName);
+        $nbPostCrawled = 0;
+        $currentPage = 1;
+        while($nbPostCrawled < self::POST2CRAWL and  $currentPage <=self::MAXPAGE) {
+            $currentUrl = self::BASEURL.$currentPage;
+            echo $currentUrl."\n";
+            $request = new Request('GET', $currentUrl);
+            $client = new Client(['base_uri' => $currentUrl]);
+            $response = $client->send($request, ['timeout' => 5]);
+            $crawler = new Crawler();
+            $crawler->addHtmlContent((string)$response->getBody()->getContents());
+            $crawler->filter('div.post.article')->each(function ($node ) {
+                $content = $node->children()->first()->text();
+                echo $content;
+                if($nbPostCrawled < self::POST2CRAWL) {
+                    echo $content." saved";
+                }
+                $nbPostCrawled++;
+            });
+            $currentPage++;
         }
-        // echo $body;
-    }
+        // $request = new Request('GET', self::BASEURL);
+        // $client = new Client(['base_uri' => self::BASEURL]);
+        // $response = $client->send($request, ['timeout' => 5]);
+        // $body = $response->getBody();
+
+        // $crawler = new Crawler($body->getContents());
+
+        // foreach ($crawler as $domElement) {
+        //     var_dump($domElement->nodeName);
+        // }
+        // $htmlret = $crawler->html();
+        // $this->logger->debug($htmlret);
+
+        // $items = $crawler->filter('div[class="panel-body"]');
+        // echo "\n found " . count($items) . " panel-body divs\n";
+        }
 }

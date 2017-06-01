@@ -29,9 +29,9 @@ class Post
     private $content;
 
     /**
-     * @var \Date
+     * @var \DateTime
      *
-     * @ORM\Column(name="date", type="date")
+     * @ORM\Column(name="date", type="datetime")
      */
     private $date;
 
@@ -80,7 +80,7 @@ class Post
     /**
      * Set date
      *
-     * @param \Date $date
+     * @param \Datetime $date
      *
      * @return Post
      */
@@ -94,7 +94,7 @@ class Post
     /**
      * Get date
      *
-     * @return \Date
+     * @return \Datetime
      */
     public function getDate()
     {
