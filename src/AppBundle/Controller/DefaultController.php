@@ -34,7 +34,7 @@ class DefaultController extends Controller
         ]);
     }
     /**
-     * @Route("/createpost", name="action")
+     * @Route("/api/createpost", name="action")
      */
     public function createPost(Request $request)
     {
@@ -48,15 +48,70 @@ class DefaultController extends Controller
     public function getPosts(Request $request)
     {
         $this->logger->info("entering getPosts");
-        $from = $request->getQueryString();
-        $this->logger->info("FROM: ".$from);
 
+        $from = $request->get('from');
+        $to = $request->query->get('to');
+        $author = $request->query->get('author');
+
+        $this->logger->info("Queries: ".$author." ".$from." ".$to);
+
+        if(!is_null($author)) {
+            return $this->forward(
+                        $this->get('router')->match("/api/postsauthor")['_controller'],
+                        array('request' => $request)
+            );
+        } elseif (!is_null($from) and !is_null($to)) {
+            return $this->forward(
+                        $this->get('router')->match("/api/postsfromto")['_controller'],
+                        array('request' => $request)
+            );
+        }
+        
         $repo = $this->getDoctrine()->getRepository('AppBundle:Post');
         $data = $repo->createQueryBuilder('q')
-                     ->getQuery()
-                     ->getArrayResult();
+                    ->getQuery()
+                    ->getArrayResult();
 
-    return new JsonResponse($data);
+        return new JsonResponse($data);
     }
 
+    /**
+     * @Route("/api/postsauthor", name="postsauthor")
+     * @Method({"GET"})
+     */
+    public function getPostsFromAuthor(Request $request) 
+    {
+        $author = $request->query->get('author');
+        $this->logger->info("getPostsFromAuthor: ".$author);
+        $em = $this->getDoctrine()->getManager();
+        $data = $em->getRepository('AppBundle:Post')->getPostsFromAuthor($author);
+        return new JsonResponse($data);
+   }
+    /**
+     * @Route("/api/postsfromto", name="postsfromto")
+     * @Method({"GET"})
+     */
+    public function getPostsFromTo(Request $request) 
+    {
+        $from = $request->get('from');
+        $to = $request->query->get('to');
+
+        $this->logger->info("getPostsFromTo: from : ".$from." to : ".$to);
+        $em = $this->getDoctrine()->getManager();
+        $data = $em->getRepository('AppBundle:Post')->getPostsFromTo($from,$to);
+        return new JsonResponse($data);
+   }
+    /**
+     * @Route("/api/posts/{id}", name="postid")
+     * @Method({"GET"})
+     */
+    public function getPostsFromId($id)
+    {
+        $this->logger->info("getPostsFromId: ".$id);
+        $em = $this->getDoctrine()->getManager();
+        $repo = $this->getDoctrine()->getRepository('AppBundle:Post');
+
+        // return new JsonResponse($em->getRepository('AppBundle:Post')->find($id));
+        return new JsonResponse($em->getRepository('AppBundle:Post')->getPostsFromId($id));
+    }
 }

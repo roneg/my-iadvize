@@ -21,15 +21,20 @@ class PostRepository extends \Doctrine\ORM\EntityRepository
         $post = new Post();
         $post->setContent('Message');
         $post->setDate(new \DateTime('2014-01-01 00:00:00'));
-        $post->setAuthor('Me');
+        $post->setAuthor('You');
 
         $em->persist($post);
-
-        // actually executes the queries (i.e. the INSERT query)
         $em->flush();
-        var_dump($post);
 
         return new Response('Saved new post with id '.$post->getId());
+    }
+
+
+    public function save(Post $post)
+    {
+        $em = $this->getEntityManager();
+        $em->persist($post);
+        $em->flush();
     }
 
     public function getPosts()
@@ -38,16 +43,32 @@ class PostRepository extends \Doctrine\ORM\EntityRepository
 
         $query = $em->createQuery("select p from AppBundle\Entity\Post p");
         $posts = $query->getArrayResult();
-        var_dump($posts);
 
-        // return new Response('List of Posts entities');
-        return new JsonResponse($posts);
+        return $posts;
     }
 
-    public function save(Post $post)
+    public function getPostsFromAuthor($author)
+    {
+        $posts = $this->createQueryBuilder('q')
+        ->andwhere('q.author = :author')
+        ->setParameter('author', $author)
+        ->getQuery()
+        ->getArrayResult();
+        return $posts;
+    }
+    public function getPostsFromTo($from,$to)
+    {
+        $posts = $this->createQueryBuilder('q')
+        ->andwhere('q.author = :author')
+        ->setParameter('author', $author)
+        ->getQuery()
+        ->getArrayResult();
+        return $posts;
+    }
+    public function getPostsFromId($id)
     {
         $em = $this->getEntityManager();
-        $em->persist($post);
-        $em->flush();
+        $posts = $em->find('AppBundle:Post', $id);
+        return $posts;
     }
 }

@@ -51,6 +51,11 @@ class AppCommand extends ContainerAwareCommand
             $response = $client->send($request, ['timeout' => 5]);
             $crawler = new Crawler();
             $crawler->addHtmlContent((string)$response->getBody()->getContents());
+        foreach ($crawler as $domElement) {
+        //     var_dump($domElement->nodeName);
+                    echo $domElement->nodeValue;
+
+        }
             $crawler->filter('div.post.article')->each(function ($node ) {
                 $content = $node->children()->first()->text();
                 echo $content;
