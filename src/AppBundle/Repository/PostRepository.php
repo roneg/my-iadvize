@@ -5,6 +5,7 @@ namespace AppBundle\Repository;
 use AppBundle\Entity\Post;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use DateTime;
 
 /**
  * PostRepository
@@ -28,7 +29,6 @@ class PostRepository extends \Doctrine\ORM\EntityRepository
 
         return new Response('Saved new post with id '.$post->getId());
     }
-
 
     public function save(Post $post)
     {
@@ -59,16 +59,21 @@ class PostRepository extends \Doctrine\ORM\EntityRepository
     public function getPostsFromTo($from,$to)
     {
         $posts = $this->createQueryBuilder('q')
-        ->andwhere('q.author = :author')
-        ->setParameter('author', $author)
+        ->andWhere('q.date >=  :from')
+        ->andWhere('q.date <=  :to')
+        ->setParameter('from',new DateTime($from))
+        ->setParameter('to',new DateTime($to))
         ->getQuery()
         ->getArrayResult();
         return $posts;
     }
     public function getPostsFromId($id)
     {
-        $em = $this->getEntityManager();
-        $posts = $em->find('AppBundle:Post', $id);
+        $posts = $this->createQueryBuilder('q')
+        ->andwhere('q.id = :id')
+        ->setParameter('id', $id)
+        ->getQuery()
+        ->getArrayResult();
         return $posts;
     }
 }

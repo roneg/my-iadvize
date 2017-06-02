@@ -9,6 +9,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 use AppBundle\Entity\Post;
 use Psr\Log\LoggerInterface;
@@ -68,11 +69,13 @@ class DefaultController extends Controller
         }
         
         $repo = $this->getDoctrine()->getRepository('AppBundle:Post');
-        $data = $repo->createQueryBuilder('q')
+        $posts = $repo->createQueryBuilder('q')
                     ->getQuery()
                     ->getArrayResult();
+        
+        return new Response(json_encode(['posts' => $posts,  'count' => count($posts)]));
 
-        return new JsonResponse($data);
+        // return new JsonResponse($data);
     }
 
     /**
@@ -84,8 +87,8 @@ class DefaultController extends Controller
         $author = $request->query->get('author');
         $this->logger->info("getPostsFromAuthor: ".$author);
         $em = $this->getDoctrine()->getManager();
-        $data = $em->getRepository('AppBundle:Post')->getPostsFromAuthor($author);
-        return new JsonResponse($data);
+        $posts = $em->getRepository('AppBundle:Post')->getPostsFromAuthor($author);
+        return new Response(json_encode(['posts' => $posts,  'count' => count($posts)]));
    }
     /**
      * @Route("/api/postsfromto", name="postsfromto")
@@ -98,8 +101,8 @@ class DefaultController extends Controller
 
         $this->logger->info("getPostsFromTo: from : ".$from." to : ".$to);
         $em = $this->getDoctrine()->getManager();
-        $data = $em->getRepository('AppBundle:Post')->getPostsFromTo($from,$to);
-        return new JsonResponse($data);
+        $posts = $em->getRepository('AppBundle:Post')->getPostsFromTo($from,$to);
+        return new Response(json_encode(['posts' => $posts,  'count' => count($posts)]));
    }
     /**
      * @Route("/api/posts/{id}", name="postid")
@@ -108,10 +111,13 @@ class DefaultController extends Controller
     public function getPostsFromId($id)
     {
         $this->logger->info("getPostsFromId: ".$id);
-        $em = $this->getDoctrine()->getManager();
-        $repo = $this->getDoctrine()->getRepository('AppBundle:Post');
 
-        // return new JsonResponse($em->getRepository('AppBundle:Post')->find($id));
-        return new JsonResponse($em->getRepository('AppBundle:Post')->getPostsFromId($id));
+        $em = $this->getDoctrine()->getManager();
+        $post = $em->getRepository('AppBundle:Post')->getPostsFromId($id);
+
+        $format = 'Y-m-d H:i:s';
+        $post[0]['date'] = $post[0]['date']->format($format);
+        echo "next";
+        return new Response(json_encode(['post' => $post[0]]));
     }
 }
