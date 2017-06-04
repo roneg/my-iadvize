@@ -22,9 +22,9 @@ class Post
     private $id;
 
     /**
-     * @var string
+     * @var text
      *
-     * @ORM\Column(name="content", type="string", length=255)
+     * @ORM\Column(name="content", type="text", nullable=true)
      */
     private $content;
 
@@ -36,9 +36,9 @@ class Post
     private $date;
 
     /**
-     * @var string
+     * @var text
      *
-     * @ORM\Column(name="author", type="string", length=255)
+     * @ORM\Column(name="author", type="text", length=255)
      */
     private $author;
 
@@ -56,7 +56,7 @@ class Post
     /**
      * Set content
      *
-     * @param string $content
+     * @param text $content
      *
      * @return Post
      */
@@ -70,7 +70,7 @@ class Post
     /**
      * Get content
      *
-     * @return string
+     * @return text
      */
     public function getContent()
     {
@@ -104,7 +104,7 @@ class Post
     /**
      * Set author
      *
-     * @param string $author
+     * @param text $author
      *
      * @return Post
      */
@@ -118,7 +118,7 @@ class Post
     /**
      * Get author
      *
-     * @return string
+     * @return text
      */
     public function getAuthor()
     {

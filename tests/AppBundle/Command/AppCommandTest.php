@@ -23,7 +23,6 @@ class AppCommandTest extends KernelTestCase
         ));
 
         $output = $commandTester->getDisplay();
-        // $this->assertContains('Username: toto', $output);
 
     }
 }

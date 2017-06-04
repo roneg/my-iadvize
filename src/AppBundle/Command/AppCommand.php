@@ -9,18 +9,12 @@ use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 
 use Psr\Log\LoggerInterface;
 
-use Symfony\Component\DomCrawler\Crawler;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Client;
+use AppBundle\Utils\Parse;
 
 class AppCommand extends ContainerAwareCommand
 {
     private $logger;
     
-    const BASEURL = 'http://www.viedemerde.fr/?page=';
-    const POST2CRAWL = 200;
-    const MAXPAGE = 12;
-
     protected function configure()
     {
 		$this
@@ -38,48 +32,11 @@ class AppCommand extends ContainerAwareCommand
 
         $entityManager = $this->getContainer()->get('doctrine')->getManager();
 
-        $entityManager->getRepository('AppBundle:Post')->getPosts();
+        $posts = Parse::parseSite();
 
+        //clean DB before inserting
+        $entityManager->getRepository('AppBundle:Post')->truncateDB();
 
-        $nbPostCrawled = 0;
-        $currentPage = 1;
-        while($nbPostCrawled < self::POST2CRAWL and  $currentPage <=self::MAXPAGE) {
-            $currentUrl = self::BASEURL.$currentPage;
-            echo $currentUrl."\n";
-            $request = new Request('GET', $currentUrl);
-            $client = new Client(['base_uri' => $currentUrl]);
-            $response = $client->send($request, ['timeout' => 5]);
-            $crawler = new Crawler();
-            $crawler->addHtmlContent((string)$response->getBody()->getContents());
-        foreach ($crawler as $domElement) {
-        //     var_dump($domElement->nodeName);
-                    echo $domElement->nodeValue;
-
-        }
-            $crawler->filter('div.post.article')->each(function ($node ) {
-                $content = $node->children()->first()->text();
-                echo $content;
-                if($nbPostCrawled < self::POST2CRAWL) {
-                    echo $content." saved";
-                }
-                $nbPostCrawled++;
-            });
-            $currentPage++;
-        }
-        // $request = new Request('GET', self::BASEURL);
-        // $client = new Client(['base_uri' => self::BASEURL]);
-        // $response = $client->send($request, ['timeout' => 5]);
-        // $body = $response->getBody();
-
-        // $crawler = new Crawler($body->getContents());
-
-        // foreach ($crawler as $domElement) {
-        //     var_dump($domElement->nodeName);
-        // }
-        // $htmlret = $crawler->html();
-        // $this->logger->debug($htmlret);
-
-        // $items = $crawler->filter('div[class="panel-body"]');
-        // echo "\n found " . count($items) . " panel-body divs\n";
-        }
+        $entityManager->getRepository('AppBundle:Post')->savePostsArray($posts);
+    }
 }

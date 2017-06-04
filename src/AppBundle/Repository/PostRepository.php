@@ -15,6 +15,7 @@ use DateTime;
  */
 class PostRepository extends \Doctrine\ORM\EntityRepository
 {
+
     public function createPost()
     {  
         $em = $this->getEntityManager();
@@ -34,6 +35,16 @@ class PostRepository extends \Doctrine\ORM\EntityRepository
     {
         $em = $this->getEntityManager();
         $em->persist($post);
+        $em->flush();
+    }
+
+    public function savePostsArray($posts)
+    {
+        $em = $this->getEntityManager();
+        
+        foreach ($posts as $post) {
+            $em->persist($post);
+        }
         $em->flush();
     }
 
@@ -60,8 +71,8 @@ class PostRepository extends \Doctrine\ORM\EntityRepository
     {
         $posts = $this->createQueryBuilder('q')
         ->andWhere('q.date >=  :from')
-        ->andWhere('q.date <=  :to')
         ->setParameter('from',new DateTime($from))
+        ->andWhere('q.date <=  :to')
         ->setParameter('to',new DateTime($to))
         ->getQuery()
         ->getArrayResult();
@@ -75,5 +86,12 @@ class PostRepository extends \Doctrine\ORM\EntityRepository
         ->getQuery()
         ->getArrayResult();
         return $posts;
+    }
+    public function truncateDB()
+    {
+        $em = $this->getEntityManager();
+        $q = $em->createQuery('delete from AppBundle\Entity\Post');
+
+        $numDeleted = $q->execute();
     }
 }

@@ -50,12 +50,13 @@ class DefaultController extends Controller
     {
         $this->logger->info("entering getPosts");
 
-        $from = $request->get('from');
+        $from = $request->query->get('from');
         $to = $request->query->get('to');
         $author = $request->query->get('author');
 
         $this->logger->info("Queries: ".$author." ".$from." ".$to);
 
+        // re-root queries to internal routes
         if(!is_null($author)) {
             return $this->forward(
                         $this->get('router')->match("/api/postsauthor")['_controller'],
@@ -69,13 +70,18 @@ class DefaultController extends Controller
         }
         
         $repo = $this->getDoctrine()->getRepository('AppBundle:Post');
+        $this->logger->info("repo");
         $posts = $repo->createQueryBuilder('q')
                     ->getQuery()
                     ->getArrayResult();
-        
-        return new Response(json_encode(['posts' => $posts,  'count' => count($posts)]));
+        $this->logger->info("query");
 
-        // return new JsonResponse($data);
+        $format = 'Y-m-d H:i:s';
+        for ($i=0; $i < count($posts); $i++) { 
+            $posts[$i]['date'] = $posts[$i]['date']->format($format);
+        }
+        
+        return new Response(json_encode(['posts' => $posts,  'count' => count($posts)]),200, array('Content-Type' => 'application/json'));
     }
 
     /**
@@ -88,7 +94,12 @@ class DefaultController extends Controller
         $this->logger->info("getPostsFromAuthor: ".$author);
         $em = $this->getDoctrine()->getManager();
         $posts = $em->getRepository('AppBundle:Post')->getPostsFromAuthor($author);
-        return new Response(json_encode(['posts' => $posts,  'count' => count($posts)]));
+        $format = 'Y-m-d H:i:s';
+        for ($i=0; $i < count($posts); $i++) { 
+            $posts[$i]['date'] = $posts[$i]['date']->format($format);
+        }
+        
+        return new Response(json_encode(['posts' => $posts,  'count' => count($posts)]),200, array('Content-Type' => 'application/json'));
    }
     /**
      * @Route("/api/postsfromto", name="postsfromto")
@@ -96,13 +107,18 @@ class DefaultController extends Controller
      */
     public function getPostsFromTo(Request $request) 
     {
-        $from = $request->get('from');
+        $from = $request->query->get('from');
         $to = $request->query->get('to');
 
         $this->logger->info("getPostsFromTo: from : ".$from." to : ".$to);
         $em = $this->getDoctrine()->getManager();
         $posts = $em->getRepository('AppBundle:Post')->getPostsFromTo($from,$to);
-        return new Response(json_encode(['posts' => $posts,  'count' => count($posts)]));
+        $format = 'Y-m-d H:i:s';
+        for ($i=0; $i < count($posts); $i++) { 
+            $posts[$i]['date'] = $posts[$i]['date']->format($format);
+        }
+        
+        return new Response(json_encode(['posts' => $posts,  'count' => count($posts)]),200, array('Content-Type' => 'application/json'));
    }
     /**
      * @Route("/api/posts/{id}", name="postid")
@@ -115,9 +131,26 @@ class DefaultController extends Controller
         $em = $this->getDoctrine()->getManager();
         $post = $em->getRepository('AppBundle:Post')->getPostsFromId($id);
 
+        $post[0]['date'] = $this->convertDate($post);
+
+        return new Response(json_encode(['post' => $post[0]]),200, array('Content-Type' => 'application/json'));
+    }
+    /**
+     * @Route("/api/truncate", name="cleardb")
+     * @Method({"GET"})
+     */
+    public function truncateDB()
+    {
+        $this->logger->info("truncateDB: ");
+
+        $em = $this->getDoctrine()->getManager();
+        $post = $em->getRepository('AppBundle:Post')->truncateDB();
+
+        return new Response("done");
+    }
+
+    private function convertDate($post) {
         $format = 'Y-m-d H:i:s';
-        $post[0]['date'] = $post[0]['date']->format($format);
-        echo "next";
-        return new Response(json_encode(['post' => $post[0]]));
+        return $post[0]['date']->format($format);
     }
 }
