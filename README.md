@@ -7,12 +7,24 @@ Process
 > git clone project
 
 
-install symfony
+Install symfony
 
 > php -r "readfile('https://symfony.com/installer');" > symfony
 
+Install mysql
 
-install composer
+> From Mysql website
+
+Create database symfony using doctrine
+
+> php bin/console doctrine:database:create
+
+Update schema 
+
+> php bin/console doctrine:schema:update --force
+
+
+Install composer
 
 > php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
 
